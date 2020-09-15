@@ -28,6 +28,7 @@ PKG_CONFIG_DEPENDS := \
 	CONFIG_NGINX_DAV \
 	CONFIG_NGINX_FLV \
 	CONFIG_NGINX_UBUS \
+	CONFIG_NGINX_FANCYINDEX \
 	CONFIG_NGINX_STUB_STATUS \
 	CONFIG_NGINX_HTTP_CHARSET \
 	CONFIG_NGINX_HTTP_GZIP \
@@ -242,6 +243,9 @@ ifneq ($(BUILD_VARIANT),all-module)
   ifeq ($(CONFIG_NGINX_UBUS),y)
     ADDITIONAL_MODULES += --add-module=$(PKG_BUILD_DIR)/nginx-ubus-module
   endif
+  ifeq ($(CONFIG_NGINX_FANCYINDEX),y)
+    ADDITIONAL_MODULES += --with-http_addition_module --add-module=$(PKG_BUILD_DIR)/nginx-fancyindex-module
+  endif
   ifeq ($(CONFIG_NGINX_HTTP_AUTH_REQUEST),y)
     ADDITIONAL_MODULES += --with-http_auth_request_module
   endif
@@ -398,6 +402,7 @@ define Build/Prepare
 	$(Prepare/nginx-ts)
 	$(Prepare/nginx-dav-ext-module)
 	$(Prepare/nginx-ubus-module)
+	$(Prepare/nginx-fancyindex-module)
 endef
 
 
@@ -541,6 +546,22 @@ ifeq ($(CONFIG_NGINX_UBUS),y)
 
   define Prepare/nginx-ubus-module
 	$(eval $(Download/nginx-ubus-module))
+	xzcat $(DL_DIR)/$(FILE) | tar -C $(PKG_BUILD_DIR) $(TAR_OPTIONS)
+  endef
+endif
+
+ifeq ($(CONFIG_NGINX_FANCYINDEX),y)
+  define Download/nginx-fancyindex-module
+    VERSION:=56934db14ccfb89d6cb452ea1b4c76225c89b8c1
+    SUBDIR:=nginx-fancyindex-module
+    FILE:=ngx-fancyindex-$$(VERSION).tar.xz
+    URL:=https://github.com/aperezdc/ngx-fancyindex.git
+    PROTO:=git
+  endef
+  $(eval $(call Download,nginx-fancyindex-module))
+
+  define Prepare/nginx-fancyindex-module
+	$(eval $(Download/nginx-fancyindex-module))
 	xzcat $(DL_DIR)/$(FILE) | tar -C $(PKG_BUILD_DIR) $(TAR_OPTIONS)
   endef
 endif
